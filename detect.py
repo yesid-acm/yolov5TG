@@ -57,7 +57,7 @@ def run(
         data=ROOT / 'data/coco128.yaml',  # dataset.yaml path
         imgsz=(640, 640),  # inference size (height, width)
         conf_thres=0.25,  # confidence threshold   # conf_thres=0.25 (orig)
-        iou_thres=0.60,  # NMS IOU threshold        ## iou_thres=0.45 (orig)
+        iou_thres=0.50,  # NMS IOU threshold        ## iou_thres=0.45 (orig)
          max_det=1000,  # maximum detections per image
         device='',  # cuda device, i.e. 0 or 0,1,2,3 or cpu
         view_img=False,  # show results
@@ -129,7 +129,12 @@ def run(
 
         # NMS
         with dt[2]:
-            pred = non_max_suppression(pred, conf_thres, iou_thres, classes, agnostic_nms, max_det=max_det)
+            pred = non_max_suppression(pred,
+                                       conf_thres,
+                                       iou_thres,
+                                       classes,
+                                       agnostic_nms,
+                                       max_det=max_det)
 
         # Second-stage classifier (optional)
         # pred = utils.general.apply_classifier(pred, classifier_model, im, im0s)
@@ -223,7 +228,7 @@ def parse_opt():
     parser.add_argument('--data', type=str, default=ROOT / 'data/coco128.yaml', help='(optional) dataset.yaml path')
     parser.add_argument('--imgsz', '--img', '--img-size', nargs='+', type=int, default=[640], help='inference size h,w')
     parser.add_argument('--conf-thres', type=float, default=0.25, help='confidence threshold')  # default=0.25 (original)
-    parser.add_argument('--iou-thres', type=float, default=0.60, help='NMS IoU threshold')   #  default=0.45 (original)
+    parser.add_argument('--iou-thres', type=float, default=0.5, help='NMS IoU threshold')   #  default=0.45 (original)
     parser.add_argument('--max-det', type=int, default=1000, help='maximum detections per image')
     parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
     parser.add_argument('--view-img', action='store_true', help='show results')
