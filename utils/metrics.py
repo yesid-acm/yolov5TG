@@ -32,7 +32,7 @@ def ap_per_class(tp, conf, pred_cls, target_cls, plot=False, save_dir='.', names
     """ Compute the average precision, given the recall and precision curves.
     Source: https://github.com/rafaelpadilla/Object-Detection-Metrics.
     # Arguments
-        tp:  True positives (nparray, nx1 or nx10).
+        tp:  True positives (nparray, nx1 or nx10). # MATRIZ DE 10 valores IOU con todas las detecciones
         conf:  Objectness value from 0-1 (nparray).
         pred_cls:  Predicted object classes (nparray).
         target_cls:  True object classes (nparray).
@@ -73,23 +73,24 @@ def ap_per_class(tp, conf, pred_cls, target_cls, plot=False, save_dir='.', names
         p[ci] = np.interp(-px, -conf[i], precision[:, 0], left=1)  # p at pr_score
 
         # AP from recall-precision curve
-        for j in range(tp.shape[1]):
-            ap[ci, j], mpre, mrec = compute_ap(recall[:, j], precision[:, j])
-            if plot and j == 0:
+        for j in range(tp.shape[1]):  # Loop para los 10 VALORES IOU [0.5,0.95]
+            ap[ci, j], mpre, mrec = compute_ap(recall[:, j], precision[:, j]) # AP
+            if plot and j == 0: # j=0 es iou 0.5
                 py.append(np.interp(px, mrec, mpre))  # precision at mAP@0.5
 
     # Compute F1 (harmonic mean of precision and recall)
-    f1 = 2 * p * r / (p + r + eps)
+    f1 = 2 * p * r / (p + r + eps)  # matriz de F1's Dim( número de clases, 1.000 valores de confianza)(5,1000)
+    print('shape F1:',f1.shape)
     names = [v for k, v in names.items() if k in unique_classes]  # list: only classes that have data
     names = dict(enumerate(names))  # to dict
     if plot:
-        plot_pr_curve(px, py, ap, Path(save_dir) / f'{prefix}PR_curve.png', names)
+        plot_pr_curve(px, py, ap, Path(save_dir) / f'{prefix}PR_curve.png', names) # AP para cada Clase y Sólo IOU=0.5
         plot_mc_curve(px, f1, Path(save_dir) / f'{prefix}F1_curve.png', names, ylabel='F1')
         plot_mc_curve(px, p, Path(save_dir) / f'{prefix}P_curve.png', names, ylabel='Precision')
         plot_mc_curve(px, r, Path(save_dir) / f'{prefix}R_curve.png', names, ylabel='Recall')
 
     i = smooth(f1.mean(0), 0.1).argmax()  # max F1 index
-    p, r, f1 = p[:, i], r[:, i], f1[:, i]
+    p, r, f1 = p[:, i], r[:, i], f1[:, i] # P,R de Máximo de F1 Score para cada CLASE.
     tp = (r * nt).round()  # true positives
     fp = (tp / (p + eps) - tp).round()  # false positives
     return tp, fp, p, r, f1, ap, unique_classes.astype(int)
@@ -125,7 +126,7 @@ def compute_ap(recall, precision):
 
 class ConfusionMatrix:
     # Updated version of https://github.com/kaanakan/object_detection_confusion_matrix
-    def __init__(self, nc, conf=0.25, iou_thres=0.45):
+    def __init__(self, nc, conf=0.25, iou_thres=0.45):   ###conf=0.25, iou_thres=0.45):
         self.matrix = np.zeros((nc + 1, nc + 1))
         self.nc = nc  # number of classes
         self.conf = conf
@@ -147,12 +148,12 @@ class ConfusionMatrix:
                 self.matrix[self.nc, gc] += 1  # background FN
             return
 
-        detections = detections[detections[:, 4] > self.conf]
+        detections = detections[detections[:, 4] > self.conf] # Filtro probabilidad de confianza del objeto
         gt_classes = labels[:, 0].int()
         detection_classes = detections[:, 5].int()
         iou = box_iou(labels[:, 1:], detections[:, :4])
 
-        x = torch.where(iou > self.iou_thres)
+        x = torch.where(iou > self.iou_thres)  # Filtro del IOU
         if x[0].shape[0]:
             matches = torch.cat((torch.stack(x, 1), iou[x[0], x[1]][:, None]), 1).cpu().numpy()
             if x[0].shape[0] > 1:
@@ -176,6 +177,7 @@ class ConfusionMatrix:
             for i, dc in enumerate(detection_classes):
                 if not any(m1 == i):
                     self.matrix[dc, self.nc] += 1  # predicted background
+
 
     def tp_fp(self):
         tp = self.matrix.diagonal()  # true positives
@@ -210,8 +212,36 @@ class ConfusionMatrix:
                        yticklabels=ticklabels).set_facecolor((1, 1, 1))
         ax.set_xlabel('True')
         ax.set_ylabel('Predicted')
-        ax.set_title('Confusion Matrix')
+        ax.set_title(f'Confusion Matrix_confi_{conf}_IOU_{iou_thres}')
         fig.savefig(Path(save_dir) / 'confusion_matrix.png', dpi=250)
+        plt.close(fig)
+
+        ##  Save SIN NORMALIZAR matrix
+        array = self.matrix  ## sin normalizar
+        array[array < 0.005] = np.nan  # don't annotate (would appear as 0.00)
+
+        fig, ax = plt.subplots(1, 1, figsize=(12, 9), tight_layout=True)
+        nc, nn = self.nc, len(names)  # number of classes, names
+        sn.set(font_scale=1.0 if nc < 50 else 0.8)  # for label size
+        labels = (0 < nn < 99) and (nn == nc)  # apply names to ticklabels
+        ticklabels = (names + ['background']) if labels else "auto"
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')  # suppress empty matrix RuntimeWarning: All-NaN slice encountered
+            sn.heatmap(array,
+                       ax=ax,
+                       annot=nc < 30,
+                       annot_kws={
+                           "size": 8},
+                       cmap='Blues',
+                       fmt='.2f',
+                       square=True,
+                       vmin=0.0,
+                       xticklabels=ticklabels,
+                       yticklabels=ticklabels).set_facecolor((1, 1, 1))
+        ax.set_xlabel('True')
+        ax.set_ylabel('Predicted')
+        ax.set_title(f'Confusion Matrix_confi_{conf}_IOU_{iou_thres}')
+        fig.savefig(Path(save_dir) / 'confusion_matrix.png_Sin normalizar', dpi=250)
         plt.close(fig)
 
     def print(self):
