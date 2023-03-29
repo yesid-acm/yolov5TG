@@ -212,7 +212,7 @@ class ConfusionMatrix:
                        yticklabels=ticklabels).set_facecolor((1, 1, 1))
         ax.set_xlabel('True')
         ax.set_ylabel('Predicted')
-        ax.set_title(f'Confusion Matrix_confi_{conf}_IOU_{iou_thres}')
+        ax.set_title(f'Confusion Matrix_confi_{self.conf}_IOU_{self.iou_thres}')
         fig.savefig(Path(save_dir) / 'confusion_matrix.png', dpi=250)
         plt.close(fig)
 
@@ -240,7 +240,7 @@ class ConfusionMatrix:
                        yticklabels=ticklabels).set_facecolor((1, 1, 1))
         ax.set_xlabel('True')
         ax.set_ylabel('Predicted')
-        ax.set_title(f'Confusion Matrix_confi_{conf}_IOU_{iou_thres}')
+        ax.set_title(f'Confusion Matrix_confi_{self.conf}_IOU_{self.iou_thres}')
         fig.savefig(Path(save_dir) / 'confusion_matrix.png_Sin normalizar', dpi=250)
         plt.close(fig)
 

@@ -298,7 +298,7 @@ def run(
 
     # Plots
     if plots:
-        confusion_matrix.plot(save_dir=save_dir,normalize=True, names=list(names.values()))
+        confusion_matrix.plot(save_dir=save_dir, iou_thres=iou_thres, normalize=True, names=list(names.values()))
         callbacks.run('on_val_end', nt, tp, fp, p, r, f1, ap, ap50, ap_class, confusion_matrix)
 
     # Save JSON
