@@ -43,7 +43,7 @@ from utils.general import (LOGGER, TQDM_BAR_FORMAT, Profile, check_dataset, chec
                            check_yaml, coco80_to_coco91_class, colorstr, increment_path, non_max_suppression,
                            print_args, scale_boxes, xywh2xyxy, xyxy2xywh)
 from utils.metrics import ConfusionMatrix, ap_per_class, box_iou
-from utils.plots import output_to_target, plot_images, plot_val_study
+from utils.plots import output_to_target, plot_images, plot_val_study, plot_labels_val
 from utils.torch_utils import select_device, smart_inference_mode
 
 
@@ -269,7 +269,12 @@ def run(
             plot_images(im, targets, paths, save_dir / f'val_batch{batch_i}_labels.jpg', names)  # labels
             plot_images(im, output_to_target(preds), paths, save_dir / f'val_batch{batch_i}_pred.jpg', names)  # pred
 
+
+
         callbacks.run('on_val_batch_end', batch_i, im, targets, paths, shapes, preds)
+
+    # Plot Histograma etiquetas dataset validacion
+    plot_labels_val(labels, names=names, save_dir=save_dir)
 
     # Compute metrics
     stats = [torch.cat(x, 0).cpu().numpy() for x in zip(*stats)]  # to numpy
@@ -300,6 +305,9 @@ def run(
     if plots:
         confusion_matrix.plot(save_dir=save_dir, normalize=True, names=list(names.values()))
         callbacks.run('on_val_end', nt, tp, fp, p, r, f1, ap, ap50, ap_class, confusion_matrix)
+
+    # plot de Histograma de Etiquetas para dataset Validacion
+    plot_labels(labels, names=names, save_dir= save_dir)
 
     # Save JSON
     if save_json and len(jdict):

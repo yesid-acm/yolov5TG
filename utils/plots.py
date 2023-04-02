@@ -405,7 +405,12 @@ def plot_labels(labels, names=(), save_dir=Path('')):
     ax[0].set_ylabel('instances')
     if 0 < len(names) < 30:
         ax[0].set_xticks(range(len(names)))
-        ax[0].set_xticklabels(list(names.values()), rotation=90, fontsize=10)
+        ax[0].set_xticklabels(list(names.values()), rotation=45, fontsize=10)
+
+        for clase in names.keys():
+            class_i = (np.array(c) == np.repeat(clase, len(c)))
+            ax.annotate('{}'.format(class_i.sum()), xy=(clase, class_i.sum()),
+                        xytext=(clase, class_i.sum()), arrowprops=dict(facecolor='black', shrink=0.03))
     else:
         ax[0].set_xlabel('classes')
     sn.histplot(x, x='x', y='y', ax=ax[2], bins=50, pmax=0.9)
@@ -425,6 +430,40 @@ def plot_labels(labels, names=(), save_dir=Path('')):
             ax[a].spines[s].set_visible(False)
 
     plt.savefig(save_dir / 'labels.jpg', dpi=200)
+    matplotlib.use('Agg')
+    plt.close()
+
+## Histrograma etiquetas dataset  VALIDACION.
+def plot_labels_val(labels, names=(), save_dir=Path('')):
+    # plot dataset labels
+    LOGGER.info(f"Plotting labels VAL to {save_dir / 'labels.jpg'}... ")
+    print(labels)
+    c = labels[:, 0].cpu()  # classes
+    nc = int(c.max() + 1)  # number of classes
+
+    # matplotlib labels
+    matplotlib.use('svg')  # faster
+    ax = plt.subplots(2, 2, figsize=(8, 8), tight_layout=True)[1].ravel()
+    y = ax[0].hist(c, bins=np.linspace(0, nc, nc + 1) - 0.5, rwidth=0.8)
+    with contextlib.suppress(Exception):  # color histogram bars by class
+        [y[2].patches[i].set_color([x / 255 for x in colors(i)]) for i in range(nc)]  # known issue #3195
+    ax[0].set_ylabel('instances')
+    if 0 < len(names) < 30:
+        print('ENTROOO:', names, 'values..', names.values())
+        print('clases___', c)
+        ax[0].set_xticks(range(len(names)))
+        ax[0].set_xticklabels(list(names.values()), rotation=450, fontsize=10)
+
+        for clase in names.keys():
+            class_i = (np.array(c) == np.repeat(clase, len(c)))
+            ax[0].annotate('{}'.format(class_i.sum()), xy=(clase, class_i.sum()),
+                           xytext=(clase, class_i.sum()))  # , arrowprops=dict(facecolor='black', shrink=0.03))
+
+    for a in [0, 1, 2, 3]:
+        for s in ['top', 'right', 'left', 'bottom']:
+            ax[a].spines[s].set_visible(False)
+
+    plt.savefig(save_dir / 'labels_val.jpg', dpi=200)
     matplotlib.use('Agg')
     plt.close()
 
