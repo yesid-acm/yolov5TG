@@ -80,7 +80,7 @@ def ap_per_class(tp, conf, pred_cls, target_cls, plot=False, save_dir='.', names
 
     # Compute F1 (harmonic mean of precision and recall)
     f1 = 2 * p * r / (p + r + eps)  # matriz de F1's Dim( número de clases, 1.000 valores de confianza)(5,1000)
-    print('shape F1:',f1.shape)
+    #print('shape F1:',f1.shape)
     names = [v for k, v in names.items() if k in unique_classes]  # list: only classes that have data
     names = dict(enumerate(names))  # to dict
     if plot:
