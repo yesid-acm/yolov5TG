@@ -379,7 +379,8 @@ def plot_mc_curve(px, py, save_dir=Path('mc_curve.png'), names=(), xlabel='Confi
         ax.plot(px, py.T, linewidth=1, color='grey')  # plot(confidence, metric)
 
     y = smooth(py.mean(0), 0.05)
-    print('Confianza del Máx F1:', px[y.argmax()])
+    if ylabel=='F1':
+      print('Confianza del Máx F1:', px[y.argmax()])
     ax.plot(px, y, linewidth=3, color='blue', label=f'all classes {y.max():.2f} at {px[y.argmax()]:.3f}')
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
